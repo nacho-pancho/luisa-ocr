@@ -5,8 +5,8 @@ import subprocess
 import tkinter as tk
 import tkinter.font as tkfont
 
-EXT='jpg'
-FONTSIZE=16
+EXT='gif'
+FONTSIZE=14
 index = 0
 nimages = 0 
 data = list()
@@ -22,14 +22,16 @@ def key_handler(e):
         go_to_prev()
     elif e.keysym == 'Down':
         go_to_next()
+    elif e.keysym == 'F6':
+        undelete_entry()
     elif e.keysym == 'F4':
         delete_entry()
     elif e.keysym == 'F2':
         apply()
+    elif e.keysym == 'F8':
+        revert_entry()
     elif e.keysym == 'Escape':
         quit()
-    else:
-        print('???')
 
 def go_to_next():
     global index
@@ -51,6 +53,14 @@ def delete_entry():
     refresh()
 
 
+def undelete_entry():
+    data[index] = (data[index][0],data[index][1],False,data[index][3])
+    refresh()
+
+def revert_entry():
+    dirtytext = ""
+    refresh()
+
 def text_down(ev):
     global tkentry,dirtytext
     if ev.keysym == "Return":
@@ -62,7 +72,6 @@ def text_down(ev):
 def text_up(ev):
     global dirtytext
     dirtytext = tkentry.get()
-    print('dertey',dirtytext)
 
 
 def refresh():
@@ -72,15 +81,20 @@ def refresh():
     tkimg['image'] = img
     tktxt.set(data[index][1])
     tkentry['textvariable'] = tktxt
+    #
+    # text is name of image
+    #
+    _,basename = os.path.split(data[index][0])
+    newtext = f'{basename} ({index:6d}/{nimages:6d})'
 
     if data[index][2]:
-        tknote['text'] = 'deleted'
+        tknote['text'] = newtext + ' **deleted]**'
         tknote['fg'] = 'red'
     elif data[index][3]:
-        tknote['text'] = 'modified'
+        tknote['text'] = newtext + ' **modified**'
         tknote['fg'] = 'orange'
     else:
-        tknote['text'] = 'unchanged'
+        tknote['text'] = newtext
         tknote['fg'] = 'green'
     dirtytext =""
 
@@ -135,7 +149,11 @@ if __name__ == '__main__':
         os.makedirs(dout,exist_ok=True)
 
     images = sorted([f for f in os.listdir(din) if os.path.isfile(os.path.join(din, f)) and f[-3:].lower() == EXT ])
+    index = 0
     nimages = len(images)
+    if nimages == 0:
+        print('no images found')
+        exit(1)
     for i,f in enumerate(images):
         imgfname = os.path.join(din,f)
         txtfname = os.path.join(din,f[:-3]+'gt.txt')
@@ -151,11 +169,10 @@ if __name__ == '__main__':
     win = tk.Tk()
     win.bind('<KeyPress>',key_handler)
 
-
     txtfont = tkfont.Font(family="Helvetica",size=FONTSIZE)
     tkentry = tk.Entry(win,font=txtfont,width=80,borderwidth=5)
-    tktxt = tk.StringVar(win,txt)
-    tktxt.set(txt)
+    tktxt   = tk.StringVar(win)
+    tktxt.set(data[index][1])
     tkentry['textvariable'] = tktxt
     tkentry.bind("<KeyPress>",text_down)
     tkentry.bind("<KeyRelease>",text_up)
@@ -165,14 +182,9 @@ if __name__ == '__main__':
     tkimg = tk.Label(win,image=img)
     tkimg.image = img
     tkimg.pack()
-
-    tknote = tk.Label(win,text='unchanged',font=txtfont)
+    _,basename = os.path.split(data[index][0])
+    tknote = tk.Label(win,text=f'{basename} ( {index:6d} / {nimages:6d} ) ',font=txtfont)
     tknote.pack()
     refresh()
 
     win.mainloop()
-    for i,d in enumerate(data):
-        if d[2]:
-            print('item',i,'deleted')
-        elif d[3]:
-            print('item',i,'modified')
