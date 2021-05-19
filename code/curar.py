@@ -5,7 +5,8 @@ import subprocess
 import tkinter as tk
 import tkinter.font as tkfont
 
-
+EXT='jpg'
+FONTSIZE=16
 index = 0
 nimages = 0 
 data = list()
@@ -133,7 +134,7 @@ if __name__ == '__main__':
     if not os.path.exists(dout):
         os.makedirs(dout,exist_ok=True)
 
-    images = sorted([f for f in os.listdir(din) if os.path.isfile(os.path.join(din, f)) and f[-3:].lower() == 'gif' ])
+    images = sorted([f for f in os.listdir(din) if os.path.isfile(os.path.join(din, f)) and f[-3:].lower() == EXT ])
     nimages = len(images)
     for i,f in enumerate(images):
         imgfname = os.path.join(din,f)
@@ -151,7 +152,7 @@ if __name__ == '__main__':
     win.bind('<KeyPress>',key_handler)
 
 
-    txtfont = tkfont.Font(family="Helvetica",size=14)
+    txtfont = tkfont.Font(family="Helvetica",size=FONTSIZE)
     tkentry = tk.Entry(win,font=txtfont,width=80,borderwidth=5)
     tktxt = tk.StringVar(win,txt)
     tktxt.set(txt)
