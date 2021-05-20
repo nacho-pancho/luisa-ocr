@@ -4,9 +4,9 @@ import sys
 import subprocess
 import tkinter as tk
 import tkinter.font as tkfont
+import argparse
+from PIL import Image,ImageTk
 
-EXT='gif'
-FONTSIZE=14
 index = 0
 nimages = 0 
 data = list()
@@ -76,7 +76,9 @@ def text_up(ev):
 
 def refresh():
     global tkimg,tktxt,tkentry,dirtytext
-    img = tk.PhotoImage(file=data[index][0])
+
+    img = Image.open(data[index][0])
+    img = ImageTk.PhotoImage(img)
     tkimg.image    = img
     tkimg['image'] = img
     tktxt.set(data[index][1])
@@ -133,22 +135,35 @@ def apply():
 
     exit(0)
 
+
 def quit():
     print('quit ')
     exit(0)
 
+
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        exit(1)
-    din = sys.argv[1]
-    if len(sys.argv) > 2:
-        dout = sys.argv[2]
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--font_size", type=int, default=12,
+                    help="font size")
+    ap.add_argument("--img_ext", type=str, default="gif",
+                    help="image format extension")
+    ap.add_argument("--text_ext", type=str, default="gt.txt",
+                    help="ground truth text file extension")
+    ap.add_argument("--bakdir", type=str, default="",
+                    help="backup dir (defaults to 'backup' under source dir)")
+    ap.add_argument("indir", type=str, help="source dir")
+    args = vars(ap.parse_args())
+    ext = args["img_ext"]
+    txext = args["text_ext"]
+    din = args["indir"]
+    if len(args["bakdir"]):
+        dout = args["bakdir"]
     else:
         dout = os.path.join(din,'backup')
     if not os.path.exists(dout):
         os.makedirs(dout,exist_ok=True)
 
-    images = sorted([f for f in os.listdir(din) if os.path.isfile(os.path.join(din, f)) and f[-3:].lower() == EXT ])
+    images = sorted([f for f in os.listdir(din) if os.path.isfile(os.path.join(din, f)) and f[-3:].lower() == ext ])
     index = 0
     nimages = len(images)
     if nimages == 0:
@@ -169,7 +184,7 @@ if __name__ == '__main__':
     win = tk.Tk()
     win.bind('<KeyPress>',key_handler)
 
-    txtfont = tkfont.Font(family="Helvetica",size=FONTSIZE)
+    txtfont = tkfont.Font(family="Helvetica",size=args["font_size"])
     tkentry = tk.Entry(win,font=txtfont,width=80,borderwidth=5)
     tktxt   = tk.StringVar(win)
     tktxt.set(data[index][1])
@@ -177,8 +192,8 @@ if __name__ == '__main__':
     tkentry.bind("<KeyPress>",text_down)
     tkentry.bind("<KeyRelease>",text_up)
     tkentry.pack()
-
-    img = image=tk.PhotoImage(file=data[index][0])
+    img = Image.open(data[index][0])
+    img = ImageTk.PhotoImage(img)
     tkimg = tk.Label(win,image=img)
     tkimg.image = img
     tkimg.pack()

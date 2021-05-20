@@ -4,7 +4,7 @@ calamari-train --dataset FILE \
 	--num_threads 8 \
 	--samples_per_epoch 1000 \
 	--train_data_on_the_fly \
-	--files data/luisa.1bit/0000[0-4]???.tif \
+	--files data/luisa.1bit.good/*.tif \
 	--weights results/good1/best.ckpt.h5
 # CER = 24%
 #calamari-train --files=train/*.tif --validation val/*.tif --samples_per_epoch 4000  --num_threads 4
