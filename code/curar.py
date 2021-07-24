@@ -17,14 +17,13 @@ tkimg = None
 tktxt = None
 tkentry = None
 tknote = None
-dirtytext = ""
 
 class datum:
     def __init__(self,imgname,text):
         self.imgname  = imgname
         self.text     = text
         self.cropbox  = None
-        self.oldtext  = None
+        self.oldtext  = text
         self.__deleted  = False
 
     def deleted(self):
@@ -37,11 +36,11 @@ class datum:
         self.__deleted = False
 
     def modify(self,newtext):
-        self.oldtext = self.text
+        print('oldtext',self.text,'newtext',newtext)
         self.text = newtext
 
     def modified(self):
-        return self.oldtext is not None
+        return self.oldtext != self.text
 
     def cropped(self):
         return self.cropbox is not None
@@ -70,10 +69,10 @@ def key_handler(e):
         go_back(50)
     elif e.keysym == 'Next':
         go_forward(50)
-    elif e.keysym == 'Home':
-        go_back(1000000)
-    elif e.keysym == 'End':
-        go_forward(1000000)
+    #elif e.keysym == 'Home':
+    #    go_back(1000000)
+    #elif e.keysym == 'End':
+    #    go_forward(1000000)
     elif e.keysym == 'F6':
         undelete_entry()
     elif e.keysym == 'F4':
@@ -82,6 +81,8 @@ def key_handler(e):
         apply()
     elif e.keysym == 'F8':
         revert_entry()
+    elif e.keysym == 'F10':
+        quit()
     elif e.keysym == 'Escape':
         quit()
 
@@ -122,7 +123,6 @@ def undelete_entry():
 
 def revert_entry():
     global data,index
-    dirtytext = ""
     data[index].revert()
     data[index].uncrop()
     refresh()
@@ -131,18 +131,15 @@ def revert_entry():
 
 def text_down(ev):
     global data,index
-    global tkentry,dirtytext
-    if ev.keysym == "Return":
-        if len(dirtytext) > 0:
-            data[index].modify(dirtytext)
-            refresh()
+    global tkentry
+    pass
 
 #==============================================================================
 
 def text_up(ev):
-    global dirtytext
-    dirtytext = tkentry.get()
-
+    global data,index,tkentry
+    data[index].modify(tkentry.get())
+    refresh()
 
 #==============================================================================
 
@@ -198,7 +195,7 @@ def end_drag(ev):
 
 
 def refresh():
-    global tkimg,tktxt,tkentry,dirtytext
+    global tkimg,tktxt,tkentry
     global corner_1_x,corner_1_y,corner_2_x,corner_2_y
     img = Image.open(data[index].imgname)
     #
@@ -245,8 +242,10 @@ def refresh():
         tknote['fg'] = 'green'
         if data[index].modified():
             tknote['text'] = newtext + ' **modified**'
-            tknote['fg'] = 'orange'
-            dirtytext =""
+            tknote['fg'] = 'brown'
+            tkentry['fg'] = 'brown'
+        else:
+            tkentry['fg'] = 'black'
         if data[index].cropped():
             tknote['fg'] = 'orange'
             tknote['text'] = tknote['text'] + ' **cropped**'
@@ -279,7 +278,7 @@ def apply():
         else:
             if d.modified():
                 print('item',i,'will be modified')
-                print('path', d.imgname, 'text', d.text)
+                print('path', d.imgname, 'old text',d.oldtext, 'new text', d.text)
                 #
                 # BACKUP
                 #
@@ -289,7 +288,7 @@ def apply():
                 subprocess.run(['cp', tname, tbak])
                 # MODIFY
                 with open(tname,'w') as f:
-                    print(txt,file=f)
+                    print(d.text,file=f)
                 #
                 # CROP 
                 #
@@ -326,7 +325,7 @@ def quit():
 if __name__ == '__main__':
     print('VERSION 2')
     ap = argparse.ArgumentParser()
-    ap.add_argument("--font_size", type=int, default=12,
+    ap.add_argument("--font_size", type=int, default=20,
                     help="font size")
     ap.add_argument("--img_ext", type=str, default="gif",
                     help="image format extension")
@@ -374,7 +373,9 @@ if __name__ == '__main__':
     tkentry['textvariable'] = tktxt
     tkentry.bind("<KeyPress>",text_down)
     tkentry.bind("<KeyRelease>",text_up)
+    tkentry['bg'] = 'white'
     tkentry.pack()
+
     img = Image.open(data[index].imgname)
     img = ImageTk.PhotoImage(img)
     tkimg = tk.Label(win,image=img)

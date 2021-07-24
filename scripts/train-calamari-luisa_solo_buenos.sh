@@ -6,9 +6,9 @@
 # start with the weights from a previous net trained on the 80 and 90 quality percentiles of Tesseract outputs
 
 calamari-train --dataset FILE \
-	--validation_split_ratio 0.1 \
+	--validation_split_ratio 0.2 \
 	--num_threads 8 \
-	--samples_per_epoch 4000 \
+	--samples_per_epoch 1000 \
 	--train_data_on_the_fly \
 	--files data/luisa.1bit.good/*.tif \
 	--weights results/pretrained_8090/best.ckpt.h5 $*
