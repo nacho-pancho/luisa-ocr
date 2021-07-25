@@ -15,9 +15,7 @@ def list_to_hdf5(cfout,indir,imglist):
         imgfname = os.path.join(indir,f)
         txtfname = os.path.join(indir,f[:-3]+'gt.txt')
         img   = Image.open(imgfname)
-        Ibool = np.array(img,dtype=np.bool)
-        I8    = np.zeros(Ibool.shape)
-        I8[Ibool] = 255
+        I8    = np.array(img,dtype=np.uint8)
         with open(txtfname,'r') as f:
             txt = f.readline().strip()
             if cfout.write(I8,txt) != 0:
@@ -70,24 +68,33 @@ if __name__ == '__main__':
     random.seed(rng_seed)
     random.shuffle(images)
 
-    img_train = images[:num_train]
-    img_val   = images[num_train:(num_train+num_val)]
-    img_test  = images[-num_test:]
     #
     # generate HDF5 files
     #
-    train_out = os.path.join(outdir,prefix+'-train.h5')
-    cfout = calamardo.CalamariFile(train_out,'w',max_samples=num_train)
-    list_to_hdf5(cfout,indir,img_train)
-    cfout.close()
+    if num_train > 0:
+        img_train = images[:num_train]
+        train_out = os.path.join(outdir,prefix+'-train.h5')
+        cfout = calamardo.CalamariFile(train_out,'w',max_samples=num_train)
+        list_to_hdf5(cfout,indir,img_train)
+        cfout.close()
+    else:
+        print('no training subset.')
 
-    val_out   = os.path.join(outdir,prefix+'-val.h5')
-    cfout = calamardo.CalamariFile(val_out,'w',max_samples=num_val)
-    list_to_hdf5(cfout,indir,img_val)
-    cfout.close()
+    if num_val > 0:
+        img_val   = images[num_train:(num_train+num_val)]
+        val_out   = os.path.join(outdir,prefix+'-val.h5')
+        cfout = calamardo.CalamariFile(val_out,'w',max_samples=num_val)
+        list_to_hdf5(cfout,indir,img_val)
+        cfout.close()
+    else:
+        print('no validation subset.')
 
-    test_out  = os.path.join(outdir,prefix+'-test.h5')
-    cfout = calamardo.CalamariFile(test_out,'w',max_samples=num_test)
-    list_to_hdf5(cfout,indir,img_test)
-    cfout.close()
+    if num_test > 0:
+        img_test  = images[-num_test:]
+        test_out  = os.path.join(outdir,prefix+'-test.h5')
+        cfout = calamardo.CalamariFile(test_out,'w',max_samples=num_test)
+        list_to_hdf5(cfout,indir,img_test)
+        cfout.close()
+    else:
+        print('no testing subset.')
 
