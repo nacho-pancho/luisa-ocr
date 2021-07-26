@@ -256,13 +256,12 @@ def refresh():
 #==============================================================================
 
 def apply():
-
+    bitacora = open('bitacora.txt','w')
     for i,d in enumerate(data):
         #ipath,txt,deleted,modified = d
         path, iname = os.path.split(d.imgname)
         basename, ext = os.path.splitext(iname)
         tname = os.path.join(din, basename + '.gt.txt')
-
         if d.deleted():
             print('item ',i,'will be deleted')
             print('path',d.imgname,'text',d.text)
@@ -274,9 +273,12 @@ def apply():
             # DELETE
             subprocess.run(['rm','-f',d.imgname])
             subprocess.run(['rm','-f',tname])
+            print(i,'D',file=bitacora)
 
         else:
+            changed = False
             if d.modified():
+                changed = True
                 print('item',i,'will be modified')
                 print('path', d.imgname, 'old text',d.oldtext, 'new text', d.text)
                 #
@@ -293,6 +295,7 @@ def apply():
                 # CROP 
                 #
             if d.cropped():
+                changed = True
                 print('item',i,' will be cropped to ',d.cropbox)
                 #
                 # BACKUP
@@ -307,7 +310,11 @@ def apply():
                 img = Image.open(d.imgname)
                 img = img.crop(d.cropbox)
                 img.save(d.imgname,compression='ccitt_group4')
-
+            if changed:
+                print(i,'M',file=bitacora)
+            else:
+                print(i,'U',file=bitacora)
+    bitacora.close()
     exit(0)
 
 

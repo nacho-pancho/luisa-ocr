@@ -27,7 +27,7 @@ if __name__ == '__main__':
         txtfname = os.path.join(dout,f'{i:08d}.gt.txt')
         print(imgfname,txtfname)
         if np.max(img) == 1:
-            img = (255*1-img).astype(np.uint8)
+            img = (255-255*img).astype(np.uint8)
         imgio.imsave(imgfname,img)
         with open(txtfname,'w') as f:
             print(txt,file=f)
